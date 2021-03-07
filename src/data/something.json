@@ -1,0 +1,57 @@
+{
+  "singular": "Big Mac",
+  "plural": "Big Macs",
+  "icon": "🍔",
+  "logo": "/assets/logo.svg",
+  "year": {
+    "from": 2013,
+    "default": 2015
+  },
+  "category": {
+    "in": "in",
+    "default": "United States"
+  },
+  "csvColumnNames": {
+    "date": "date",
+    "category": "name",
+    "usdPrice": "dollar_price"
+  },
+  "stores": {
+    "xau": "Gold",
+    "xag": "Silver"
+  },
+  "dataSources": [
+    {
+      "what": "The Big Mac index data",
+      "providedBy": "The Economist",
+      "link": "https://github.com/TheEconomist/big-mac-data"
+    }
+  ],
+  "credits": [
+    {
+      "what": "Hamburger pic",
+      "providedBy": "OpenMoji",
+      "link": "https://openmoji.org/library/"
+    }
+  ],
+  "repoLink": "https://github.com/alexk111/store-of-something",
+  "colors": {
+    "primary": "#5c9e31",
+    "secondary": "#5c6c7c",
+    "background": "#ffffff",
+    "bitcoin": "#FF9900"
+  },
+  "madeBy": {
+    "idOrName": "@alex_kaul",
+    "link": "https://twitter.com/alex_kaul"
+  },
+  "website": {
+    "rootUrl": "https://storeofbigmacs.com/",
+    "title": "🍔 Store Of Big Macs",
+    "description": "Find out how many Big Macs could a monetary value of a single Big Mac get over time when stored in Bitcoin, USD, Gold or Silver.",
+    "twitter": {
+      "creator": "@alex_kaul",
+      "site": "@alex_kaul"
+    }
+  }
+}

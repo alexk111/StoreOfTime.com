@@ -1,0 +1,24 @@
+{
+  "name": "store-of-something",
+  "version": "0.1.0",
+  "main": "index.js",
+  "repository": "https://github.com/alexk111/store-of-something.git",
+  "author": "Alex Kaul",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "node ./builder.js",
+    "dev": "NODE_ENV=development concurrently -k \"serve ./build\" \"nodemon -e ejs,json,svg,png --watch src ./builder.js\""
+  },
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "ejs": "^3.1.6",
+    "fs-extra": "^9.1.0",
+    "glob": "^7.1.6"
+  },
+  "devDependencies": {
+    "concurrently": "^6.0.0",
+    "nodemon": "^2.0.7",
+    "serve": "^11.3.2"
+  }
+}

@@ -1,0 +1,32 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "12 0 * * *"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.1.4
+        with:
+          node-version: 12.16.1
+      - name: Install Deps
+        run: |
+          yarn install --production
+      - name: Build
+        run: |
+          yarn build
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: build
