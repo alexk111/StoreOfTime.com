@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "build": "node ./builder.js",
-    "collect": "node ./data-collector.js",
+    "collect-cpi": "node ./data-collector-cpi.js",
     "dev": "NODE_ENV=development concurrently -k \"serve ./build\" \"nodemon -e ejs,json,svg,png --watch src ./builder.js\""
   },
   "dependencies": {
