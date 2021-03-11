@@ -41,7 +41,11 @@ async function loadCPIFromRemoteAPI(countryCodes) {
   const url = `http://dataservices.imf.org/REST/SDMX_JSON.svc/CompactData/CPI/M.${countryCodes.join("+")}.PCPI_IX?startPeriod=2013&endPeriod=${(new Date()).getUTCFullYear()}`;
   return new Promise((resolve, reject) => {
     http
-      .get(url, (res) => {
+      .get(url, {
+        headers: {
+          "User-Agent": "Data Agent"
+        }
+      }, (res) => {
         let body = "";
 
         res.on("data", (chunk) => {
@@ -62,7 +66,7 @@ async function loadCPIFromRemoteAPI(countryCodes) {
                     const dataItem = obsData[i];
                     outData.push([dataItem["@TIME_PERIOD"], dataItem["@OBS_VALUE"]]);
                   }
-                  await fse.writeFile(pathOutFile, JSON.stringify(outData));
+                  await fse.writeFile(pathOutFile, JSON.stringify(outData,null,2));
                 }
               }
             }
