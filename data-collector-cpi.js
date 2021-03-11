@@ -7,7 +7,6 @@ const fse = require("fs-extra");
 const pathSrc = "./src";
 const pathCollected = pathSrc + "/data/_collected";
 const pathCollectedCPI = pathCollected + "/cpi";
-const pathCollectedExchange = pathCollected + "/exchange";
 
 async function delay(duration) {
   return new Promise((resolve) => setTimeout(resolve,duration));
