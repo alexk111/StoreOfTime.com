@@ -9,6 +9,7 @@
   "scripts": {
     "build": "node ./builder.js",
     "collect-cpi": "node ./data-collector-cpi.js",
+    "collect-currencies": "node ./data-collector-currencies.js",
     "dev": "NODE_ENV=development concurrently -k \"serve ./build\" \"nodemon -e ejs,json,svg,png --watch src ./builder.js\""
   },
   "dependencies": {
