@@ -87,7 +87,7 @@ async function build() {
     throw new Error ("Collect currencies data first!");
   }
 
-  let dPointer = new Date(Date.UTC(2013,0,1,0,0,0,0));
+  let dPointer = new Date(Date.UTC(2013,3,1,0,0,0,0));
   const dNow = new Date();
   const dEndPointer = new Date(dNow);
   dEndPointer.setUTCDate(1);
