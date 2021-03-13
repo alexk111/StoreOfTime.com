@@ -7,13 +7,13 @@
     "from": 2013,
     "default": 2015
   },
-  "category": {
-    "in": "in",
-    "default": "United States"
+  "countries": {
+    "excluded": ["AT"],
+    "default": "US"
   },
   "stores": {
-    "xau": "Gold",
-    "xag": "Silver"
+    "XAU": "Gold",
+    "XAG": "Silver"
   },
   "dataSources": [
     {

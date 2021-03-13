@@ -24,6 +24,10 @@ const usdPrices = {}; // USD price history in different currencies (by currency 
 const countries = {}; // countries data (by country code)
 const redenominations = {}; // redenominations data (by country code)
 
+const thingPrices = {}; // thing price history in Local/USD/BTC/XAU/XAG (by country code)
+
+let latestYYYYMMDD;
+
 function strPriceToNum(strPrice) {
   return (strPrice * 1).toFixed(2) * 1;
 }
@@ -39,6 +43,11 @@ function strYYYYMMDDToArr(strDate) {
   return arrDate;
 }
 
+function strYYYYMMDDToTimestamp(strDate) {
+  const arrDate = strYYYYMMDDToArr(strDate);
+  return Date.UTC(arrDate[0]*1,(arrDate[1]*1-1),arrDate[2]*1);
+}
+
 function strYYYYMMToArr(strDate) {
   // YYYY-MM
   const arrDate = strDate.split("-").map((item) => `${item * 1}`);
@@ -50,6 +59,22 @@ function strYYYYMMToArr(strDate) {
   return arrDate;
 }
 
+function dateToYYYYMMDD(d) {
+  let month = '' + (d.getUTCMonth() + 1);
+  let date = '' + d.getUTCDate();
+  const year = d.getUTCFullYear();
+
+  if (month.length < 2) {
+    month = '0' + month;
+  }
+
+  if (date.length < 2) {
+    date = '0' + date;
+  }
+
+  return [year, month, date].join('-');
+}
+
 async function loadCountriesFromCSV() {
   return new Promise((resolve, reject) => {
     fse
@@ -57,7 +82,9 @@ async function loadCountriesFromCSV() {
       .pipe(csv({}))
       .on("data", (data) => {
         const {country_code,country_name,currency_code} = data;
-        countries[country_code] = [country_name, currency_code];
+        if (something.countries.excluded.indexOf(country_code)<0) {
+          countries[country_code] = [country_name, currency_code, country_code];
+        }
       })
       .on("end", () => {
         resolve();
@@ -75,7 +102,12 @@ async function loadRedenominationsFromCSV() {
       .pipe(csv({}))
       .on("data", (data) => {
         const {date,country_code,new_currency_code,from_amount,to_amount} = data;
-        redenominations[country_code] = [date, new_currency_code,from_amount,to_amount];
+        if (something.countries.excluded.indexOf(country_code)<0) {
+          if (!redenominations[country_code]) {
+            redenominations[country_code] = [];
+          }
+          redenominations[country_code].push({timestamp: strYYYYMMDDToTimestamp(date), new_currency_code,from_amount,to_amount});
+        }
       })
       .on("end", () => {
         resolve();
@@ -90,25 +122,24 @@ async function loadUSDPricesFromJSON(filePath) {
   const fileData = await fse.readFile(filePath);
   const parsedData = JSON.parse(fileData);
   const strDate = path.basename(filePath, '.json');
-  let arrYYYYMMDD;
+  let strYYYYMMDD;
   let rates;
   if (strDate === "latest") {
-    arrYYYYMMDD = strYYYYMMDDToArr(parsedData.date);
+    latestYYYYMMDD = parsedData.date;
+    strYYYYMMDD = parsedData.date;
     rates = parsedData.rates;
   } else {
-    arrYYYYMMDD = strYYYYMMDDToArr(strDate+"-01");
+    strYYYYMMDD = strDate+"-01";
     rates = parsedData;
   }
+  const arrYYYYMMDD = strYYYYMMDDToArr(strYYYYMMDD);
   if (arrYYYYMMDD[0] * 1 >= something.year.from) {
     for (const currCode of Object.keys(rates)) {
       const price = rates[currCode];
       if (usdPrices[currCode] === undefined) {
         usdPrices[currCode] = {};
       }
-      if (usdPrices[currCode][arrYYYYMMDD[0]] === undefined) {
-        usdPrices[currCode][arrYYYYMMDD[0]] = {};
-      }
-      usdPrices[currCode][arrYYYYMMDD[0]][arrYYYYMMDD[1]]=price;
+      usdPrices[currCode][strYYYYMMDD] = price;
     }
   }
 }
@@ -126,24 +157,40 @@ async function loadUSDPrices() {
 }
 
 async function loadCPIFromJSON(filePath) {
+  const countryCode = path.basename(filePath, '.json');
+  if (something.countries.excluded.indexOf(countryCode)>-1) {
+    return;
+  }
   const fileData = await fse.readFile(filePath);
   const parsedData = JSON.parse(fileData);
-  const countryCode = path.basename(filePath, '.json');
+  let foundFirstNonNull = false;
   for (const dataItem of parsedData) {
-    const arrYYYYMM = strYYYYMMToArr(dataItem[0]);
-    if (arrYYYYMM[0] === "2013" && (arrYYYYMM[1] === "1" || arrYYYYMM[1] === "2" || arrYYYYMM[1] === "3")) {
+    const strYYYYMM = dataItem[0];
+    if (strYYYYMM === "2013-01" || strYYYYMM === "2013-02" || strYYYYMM === "2013-03") {
       continue;
     }
-    const cpiVal = dataItem[1]*1;
+
+    let cpiVal;
+    if (dataItem[1] === null) {
+      if (!foundFirstNonNull) {
+        continue; // skip nulls at the beginning
+      }
+      cpiVal = null;
+    } else {
+      foundFirstNonNull = true;
+      cpiVal = dataItem[1]*1;
+    }
 
     if (cpi[countryCode] === undefined) {
-      cpi[countryCode] = {};
+      cpi[countryCode] = [];
     }
-    if (cpi[countryCode][arrYYYYMM[0]] === undefined) {
-      cpi[countryCode][arrYYYYMM[0]] = {};
-    }
-    cpi[countryCode][arrYYYYMM[0]][arrYYYYMM[1]]=cpiVal;
+    cpi[countryCode].push({
+      strYYYYMM,
+      cpiVal
+    })
   }
+
+  cpi[countryCode].sort((v1,v2) => v1.strYYYYMM > v2.strYYYYMM ? 1 : -1);
 }
 
 async function loadCPI() {
@@ -158,153 +205,104 @@ async function loadCPI() {
   }
 }
 
-
-// async function loadThingPricesFromCSV(filePath) {
-//   return new Promise((resolve, reject) => {
-//     fse
-//       .createReadStream(filePath)
-//       .pipe(csv({}))
-//       .on("data", (data) => {
-//         const strDate = data[something.csvColumnNames.date];
-//         const arrDate = strDateToArr(strDate);
-
-//         if (arrDate[0] * 1 >= something.year.from) {
-//           const strCategory = data[something.csvColumnNames.category];
-//           const strPrice = data[something.csvColumnNames.usdPrice];
-//           if (thingPrices[strCategory] === undefined) {
-//             thingPrices[strCategory] = {};
-//           }
-//           if (thingPrices[strCategory][arrDate[0]] === undefined) {
-//             thingPrices[strCategory][arrDate[0]] = {};
-//           }
-//           if (thingPrices[strCategory][arrDate[0]][arrDate[1]] === undefined) {
-//             thingPrices[strCategory][arrDate[0]][arrDate[1]] = {};
-//           }
-//           thingPrices[strCategory][arrDate[0]][arrDate[1]][
-//             arrDate[2]
-//           ] = strPriceToNum(strPrice);
-//         }
-//       })
-//       .on("end", () => {
-//         resolve();
-//       })
-//       .on("error", (err) => {
-//         reject(err);
-//       });
-//   });
-// }
-// async function loadThingPrices() {
-//   // Get price files
-//   const csvPaths = await promGlob("**/*.csv", {
-//     cwd: `${pathSrc}/data`,
-//   });
-
-//   // Load prices
-//   for (const csvPath of csvPaths) {
-//     await loadThingPricesFromCSV(`${pathSrc}/data/${csvPath}`);
-//   }
-// }
-
-function prepareBitcoinPrices(vsCurrency, dataFromRemoteAPI) {
-  const prices = JSON.parse(dataFromRemoteAPI).prices;
-
-  bitcoinPrices[vsCurrency] = {};
-  for (let i = 0; i < prices.length; i++) {
-    const price = prices[i];
-    const d = new Date(price[0]);
-
-    bitcoinPrices[vsCurrency][
-      `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`
-    ] = price[1];
-  }
-}
-
-async function loadBitcoinPricesFromRemoteAPI(vsCurrency) {
-  const url = `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=${vsCurrency}&from=1360000000&to=3000000000`;
-  const urlHash = crypto.createHash("md5").update(url).digest("hex");
-  const pathCacheFile = path.join(pathCache, urlHash);
-
-  if (isDevMode) {
-    if (fse.existsSync(pathCacheFile)) {
-      const cachedData = await fse.readFile(pathCacheFile);
-      prepareBitcoinPrices(vsCurrency, cachedData);
-      return;
+function applyRedenomination(countryCode, nowAmount, nowTimestamp) {
+  const res = {
+    base: {
+      amount: nowAmount,
+      currencyCode: countries[countryCode][1]
+    },
+    now: {
+      amount: nowAmount,
+      currencyCode: countries[countryCode][1]
     }
   }
-
-  return new Promise((resolve, reject) => {
-    https
-      .get(url, (res) => {
-        let body = "";
-
-        res.on("data", (chunk) => {
-          body += chunk;
-        });
-
-        res.on("end", async () => {
-          try {
-            if (isDevMode) {
-              await fse.writeFile(pathCacheFile, body);
-            }
-
-            prepareBitcoinPrices(vsCurrency, body);
-            resolve();
-          } catch (error) {
-            reject(error.message);
-          }
-        });
-      })
-      .on("error", (error) => {
-        reject(error.message);
-      });
-  });
+  if (redenominations[countryCode]) {
+    for (const item of redenominations[countryCode]) {
+      if (item.timestamp >= nowTimestamp) {
+        res.now.currencyCode = item.new_currency_code;
+        res.base.amount = res.base.amount * (item.from_amount / item.to_amount);
+      } else {
+        break;
+      }
+    }
+  }
+  return res;
 }
 
-async function loadBitcoinPrices() {
-  await loadBitcoinPricesFromRemoteAPI("usd");
-  for (const storeId in something.stores) {
-    await loadBitcoinPricesFromRemoteAPI(storeId);
-    await loadBitcoinPricesFromRemoteAPI(storeId);
-  }
-}
-
-function calculateStorePrices() {
-  // Bitcoin
-  storePrices["btc"] = {};
-  for (const date in bitcoinPrices["usd"]) {
-    const arrDate = date.split("-");
-
-    if (storePrices["btc"][arrDate[0]] === undefined) {
-      storePrices["btc"][arrDate[0]] = {};
+function calculateThingPrices() {
+  for (const countryCode of Object.keys(countries)) {
+    // init
+    const pricesByStores = {
+      BTC: {},
+      local: {},
+      USD: {}
+    };
+    for (const store of Object.keys(something.stores)) {
+      pricesByStores[store] = {};
     }
-    if (storePrices["btc"][arrDate[0]][arrDate[1]] === undefined) {
-      storePrices["btc"][arrDate[0]][arrDate[1]] = {};
-    }
-    storePrices["btc"][arrDate[0]][arrDate[1]][arrDate[2]] = strPriceToNum(
-      bitcoinPrices["usd"][date]
-    );
-  }
 
-  // The rest
-  for (const curr in bitcoinPrices) {
-    if (curr === "btc" || curr === "usd") {
+    const cpiItems = cpi[countryCode];
+    if (!cpiItems) {
       continue;
     }
 
-    storePrices[curr] = {};
-    for (const date in bitcoinPrices[curr]) {
-      const arrDate = date.split("-");
+    let curPriceObj;
+    let setEstimatePrice;
+    let curCPIStrYYYYMMDD;
+    let curThingPriceInLocalBase;
+    let curThingPriceInLocalNow;
+    let currCodeNow;
 
-      if (storePrices[curr][arrDate[0]] === undefined) {
-        storePrices[curr][arrDate[0]] = {};
+    const addToPricesByStores = (strYYYYMMDD, thingPriceInLocalBase, thingPriceInLocalNow, currencyCodeNow, isEstimate) => {
+      // a. local price
+      pricesByStores["local"][strYYYYMMDD] = [thingPriceInLocalBase, isEstimate ? 0 : 1];
+
+      // b. calc usd price
+      const thingPriceInUSD = thingPriceInLocalNow / usdPrices[currencyCodeNow][strYYYYMMDD];
+      pricesByStores["USD"][strYYYYMMDD] = [thingPriceInUSD, isEstimate ? 0 : 1];
+
+      // c. calc btc & other prices
+      for (const store of Object.keys(pricesByStores)) {
+        if (store !== "local" && store !== "USD") {
+          const thingPriceInStore = thingPriceInUSD * usdPrices[store][strYYYYMMDD];
+          pricesByStores[store][strYYYYMMDD] = [thingPriceInStore, isEstimate ? 0 : 1];
+        }
       }
-      if (storePrices[curr][arrDate[0]][arrDate[1]] === undefined) {
-        storePrices[curr][arrDate[0]][arrDate[1]] = {};
-      }
-      storePrices[curr][arrDate[0]][arrDate[1]][arrDate[2]] = strPriceToNum(
-        bitcoinPrices["usd"][date] / bitcoinPrices[curr][date]
-      );
     }
+
+    // 1. calc with cpi data
+    for (const cpiItem of cpiItems) {
+      const {strYYYYMM, cpiVal} = cpiItem;
+      curCPIStrYYYYMMDD = strYYYYMM + "-01";
+      curThingPriceInLocalNow = cpiVal * 1;
+
+      setEstimatePrice = (!curThingPriceInLocalNow);
+
+      const timestamp = strYYYYMMDDToTimestamp(curCPIStrYYYYMMDD);
+      if (!setEstimatePrice) {
+        curPriceObj = applyRedenomination(countryCode, curThingPriceInLocalNow, timestamp);
+      }
+      curThingPriceInLocalBase = curPriceObj.base.amount;
+      currCodeNow = curPriceObj.now.currencyCode;
+
+      addToPricesByStores(curCPIStrYYYYMMDD, curThingPriceInLocalBase, curThingPriceInLocalNow, currCodeNow, setEstimatePrice);
+    }
+
+    // 2. calc estimates for dates after the last cpi and till the latest exchange rate
+    setEstimatePrice = true;
+    const dPointer = new Date(strYYYYMMDDToTimestamp(curCPIStrYYYYMMDD));
+    const dEndPointer = new Date(strYYYYMMDDToTimestamp(latestYYYYMMDD));
+
+    do {
+      dPointer.setUTCDate(dPointer.getUTCDate()+1);
+      const strYYYYMMDDPointer = dateToYYYYMMDD(dPointer);
+      if (usdPrices[currCodeNow][strYYYYMMDDPointer]) {
+        addToPricesByStores(strYYYYMMDDPointer, curThingPriceInLocalBase, curThingPriceInLocalNow, currCodeNow, setEstimatePrice);
+      }
+    } while (dPointer.getTime()<=dEndPointer.getTime());
+
+    // 3. done
+    thingPrices[countryCode] = pricesByStores;
   }
 }
 
@@ -324,7 +322,7 @@ async function build() {
   await loadCPI();
 
   // Calculate prices
-  // calculateStorePrices();
+  calculateThingPrices();
 
   // Clear build dir
   await fse.emptyDir(pathBuild);
@@ -346,8 +344,8 @@ async function build() {
       path.join(pathSrc, "templates", tplPath),
       {
         something,
+        countries,
         thingPrices,
-        storePrices,
       },
       { async: true }
     );
