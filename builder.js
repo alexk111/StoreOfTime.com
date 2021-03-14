@@ -24,6 +24,7 @@ const usdPrices = {}; // USD price history in different currencies (by currency 
 const countries = {}; // countries data (by country code)
 const redenominations = {}; // redenominations data (by country code)
 
+const countriesWithAllData = {}; // countries that have all the necessary data (by country code)
 const thingPrices = {}; // thing price history in Local/USD/BTC/XAU/XAG (by country code)
 
 let latestYYYYMMDD;
@@ -205,22 +206,16 @@ async function loadCPI() {
   }
 }
 
-function applyRedenomination(countryCode, nowAmount, nowTimestamp) {
+function applyRedenomination(countryCode, baseAmount, nowTimestamp) {
   const res = {
-    base: {
-      amount: nowAmount,
-      currencyCode: countries[countryCode][1]
-    },
-    now: {
-      amount: nowAmount,
-      currencyCode: countries[countryCode][1]
-    }
+    amount: baseAmount,
+    currencyCode: countries[countryCode][1]
   }
   if (redenominations[countryCode]) {
     for (const item of redenominations[countryCode]) {
-      if (item.timestamp >= nowTimestamp) {
-        res.now.currencyCode = item.new_currency_code;
-        res.base.amount = res.base.amount * (item.from_amount / item.to_amount);
+      if (nowTimestamp >= item.timestamp) {
+        res.currencyCode = item.new_currency_code;
+        res.amount = res.amount * (item.to_amount / item.from_amount);
       } else {
         break;
       }
@@ -233,12 +228,12 @@ function calculateThingPrices() {
   for (const countryCode of Object.keys(countries)) {
     // init
     const pricesByStores = {
-      BTC: {},
-      local: {},
-      USD: {}
+      BTC: [],
+      local: [],
+      USD: []
     };
     for (const store of Object.keys(something.stores)) {
-      pricesByStores[store] = {};
+      pricesByStores[store] = [];
     }
 
     const cpiItems = cpi[countryCode];
@@ -246,7 +241,9 @@ function calculateThingPrices() {
       continue;
     }
 
-    let curPriceObj;
+    countriesWithAllData[countryCode] = countries[countryCode];
+
+    let curAmountCurrencyNow;
     let setEstimatePrice;
     let curCPIStrYYYYMMDD;
     let curThingPriceInLocalBase;
@@ -255,17 +252,17 @@ function calculateThingPrices() {
 
     const addToPricesByStores = (strYYYYMMDD, thingPriceInLocalBase, thingPriceInLocalNow, currencyCodeNow, isEstimate) => {
       // a. local price
-      pricesByStores["local"][strYYYYMMDD] = [thingPriceInLocalBase, isEstimate ? 0 : 1];
+      pricesByStores["local"].push([strYYYYMMDD,thingPriceInLocalBase, isEstimate ? 0 : 1]);
 
       // b. calc usd price
       const thingPriceInUSD = thingPriceInLocalNow / usdPrices[currencyCodeNow][strYYYYMMDD];
-      pricesByStores["USD"][strYYYYMMDD] = [thingPriceInUSD, isEstimate ? 0 : 1];
+      pricesByStores["USD"].push([strYYYYMMDD, thingPriceInUSD, isEstimate ? 0 : 1]);
 
       // c. calc btc & other prices
       for (const store of Object.keys(pricesByStores)) {
         if (store !== "local" && store !== "USD") {
           const thingPriceInStore = thingPriceInUSD * usdPrices[store][strYYYYMMDD];
-          pricesByStores[store][strYYYYMMDD] = [thingPriceInStore, isEstimate ? 0 : 1];
+          pricesByStores[store].push([strYYYYMMDD, thingPriceInStore, isEstimate ? 0 : 1]);
         }
       }
     }
@@ -274,16 +271,16 @@ function calculateThingPrices() {
     for (const cpiItem of cpiItems) {
       const {strYYYYMM, cpiVal} = cpiItem;
       curCPIStrYYYYMMDD = strYYYYMM + "-01";
-      curThingPriceInLocalNow = cpiVal * 1;
+      curThingPriceInLocalBase = cpiVal * 1;
 
-      setEstimatePrice = (!curThingPriceInLocalNow);
+      setEstimatePrice = (!curThingPriceInLocalBase);
 
       const timestamp = strYYYYMMDDToTimestamp(curCPIStrYYYYMMDD);
       if (!setEstimatePrice) {
-        curPriceObj = applyRedenomination(countryCode, curThingPriceInLocalNow, timestamp);
+        curAmountCurrencyNow = applyRedenomination(countryCode, curThingPriceInLocalBase, timestamp);
       }
-      curThingPriceInLocalBase = curPriceObj.base.amount;
-      currCodeNow = curPriceObj.now.currencyCode;
+      curThingPriceInLocalNow = curAmountCurrencyNow.amount;
+      currCodeNow = curAmountCurrencyNow.currencyCode;
 
       addToPricesByStores(curCPIStrYYYYMMDD, curThingPriceInLocalBase, curThingPriceInLocalNow, currCodeNow, setEstimatePrice);
     }
@@ -308,11 +305,6 @@ function calculateThingPrices() {
 
 async function build() {
   console.info("Building..." + (isDevMode ? " (dev mode)" : ""));
-
-  // Prepare cache dir
-  if (isDevMode) {
-    await fse.mkdirs(pathCache);
-  }
 
   // Load prices
   console.info("Loading data...");
@@ -353,7 +345,7 @@ async function build() {
       path.join(pathSrc, "templates", tplPath),
       {
         something,
-        countries,
+        countries: countriesWithAllData,
         thingPrices,
       },
       { async: true }
