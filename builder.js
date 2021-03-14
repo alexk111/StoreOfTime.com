@@ -331,6 +331,15 @@ async function build() {
   fse.copy(path.join(pathSrc, "assets"), path.join(pathBuild, "assets"));
   console.info("Copied assets");
 
+  // Make data files
+  const destDataPath = path.join(pathBuild, "data");
+  await fse.mkdirs(destDataPath);
+  for (const countryCode of Object.keys(thingPrices)) {
+    const dataFilePath = path.join(destDataPath, countryCode + ".json");
+    fse.writeFile(dataFilePath, JSON.stringify(thingPrices[countryCode]));
+    console.info(`Built data file ${dataFilePath}`);
+  }
+
   // Get templates
   const tplPaths = await promGlob("**/*.ejs", { cwd: `${pathSrc}/templates` });
 
@@ -352,7 +361,7 @@ async function build() {
 
     const htmlFilePath = path.join(pathBuild, tplPathData.name + ".html");
     fse.writeFile(htmlFilePath, pageHtml).then(() => {
-      console.info(`Built ${htmlFilePath}`);
+      console.info(`Built page file ${htmlFilePath}`);
     });
   });
 }
