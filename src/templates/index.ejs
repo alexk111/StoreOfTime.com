@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>⏲ Store Of Time</title>
+<title><%= something.icon %> Store Of Time</title>
 <meta name="description" content="Explore how the value of time traded for money changes when stored in Bitcoin, Local Currency, USD, Gold or Silver." />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:creator" content="@alex_kaul"">
 <meta name="twitter:site" content="@alex_kaul"">
-<meta name="twitter:title" content="⏲ Store Of Time" />
+<meta name="twitter:title" content="<%= something.icon %> Store Of Time" />
 <meta name="twitter:description" content="Explore how the value of time traded for money changes when stored in Bitcoin, Local Currency, USD, Gold or Silver." />
 <meta name="twitter:image" content="https://storeoftime.com/assets/og-1200x628.png" />
-<meta property="og:title" content="⏲ Store Of Time" />
+<meta property="og:title" content="<%= something.icon %> Store Of Time" />
 <meta property="og:description" content="Explore how the value of time traded for money changes when stored in Bitcoin, Local Currency, USD, Gold or Silver." />
 <meta property="og:url" content="https://storeoftime.com/" />
 <meta property="og:image" content="https://storeoftime.com/assets/og-1200x628.png" />
@@ -103,9 +103,19 @@
     margin: 12px;
   }
 
+  .info-block-backers a {
+    text-decoration: none;
+  }
+  .info-block-backers img {
+    padding-right: .25rem;
+    border-radius: 50%;
+    vertical-align: middle;
+    border-style: none;
+  }
+
   @media (max-width: 600px) {
 		body {
-			padding:0;
+			padding:24px 0;
 		}
 		.chart,
 		#chart {
@@ -138,7 +148,7 @@
 
 <body>
 <header>
-  <div class="logo"><img src="/assets/logo.svg" alt="Logo" /></div>
+  <div class="logo"><span class="icon"><%= something.icon %></span></div>
   <h1>Store of Time</h1>
 </header>
 
@@ -194,29 +204,65 @@
 </section>
 
 <section class="info">
+  <div class="info-block info-block-backers">
+    <h2>💝 Backers</h2>
+    <p>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/0/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/0/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/1/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/1/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/2/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/2/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/3/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/3/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/4/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/4/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/5/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/5/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/6/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/6/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/7/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/7/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/8/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/8/avatar/60" alt="Backer"/>
+      </a>
+      <a href="https://mynode.alexkaul.com/gh-backer/top/9/profile" rel="noopener nofollow" target="_blank">
+        <img src="https://mynode.alexkaul.com/gh-backer/top/9/avatar/60" alt="Backer"/>
+      </a>
+    </p>
+    <p>
+      Thank you for your support! 🙌
+      <br/>
+      <a href="https://mynode.alexkaul.com/gh-donate" target="_blank" rel="noopener noreferrer" class="btn btn-warning my-2">
+        Donate
+      </a>
+    </p>
+  </div>
   <div class="info-block">
     <h2>📈 Data</h2>
-    <p>Consumer Price Index data provided by <a href="https://www.imf.org/" target="_blank">International Monetary Fund</a>.</p>
-    <p>Exchange Rates data provided by <a href="https://openexchangerates.org/" target="_blank">Open Exchange Rates</a>.</p>
+    <p>Consumer Price Index data is provided by <a href="https://www.imf.org/" target="_blank">International Monetary Fund</a>.</p>
+    <p>Exchange Rates data is provided by <a href="https://openexchangerates.org/" target="_blank">Open Exchange Rates</a>.</p>
   </div>
   <div class="info-block">
     <h2>🧙 Open Source</h2>
     <p>Found a bug or think the website is missing a feature? It is open source and <a href="https://github.com/alexk111/StoreOfTime.com" target="_blank">available on GitHub</a>, so feel free to create an issue or a pull request.</p>
     <p>Have a price history dataset for something? Make your <a href="https://github.com/alexk111/store-of-something" target="_blank">Store of {Something}</a> website from it.</p>
   </div>
-  <% if (something.credits && something.credits.length) { %>
-  <div class="info-block">
-    <h2>🙏 Other Credits</h2>
-    <p>Emoji pics at the header are provided by <a href="https://openmoji.org/library/" target="_blank">OpenMoji</a>.</p>
-  </div>
-  <% } %>
 </section>
 
 <hr />
 
 <footer class="footer">
   <div class="footer-block">
-    Made with <a href="https://twitter.com/alex_kaul" target="_blank">@alex_kaul</a>’s ⏲ and <a href="https://github.com/alexk111/store-of-something" target="_blank">Store of {Something}</a>.
+    Made with <a href="https://twitter.com/alex_kaul" target="_blank">@alex_kaul</a>’s <%= something.icon %> and <a href="https://github.com/alexk111/store-of-something" target="_blank">Store of {Something}</a>.
   </div>
   <div class="footer-block">
     Last update: <%= new Date().toISOString().slice(0,10); %>
