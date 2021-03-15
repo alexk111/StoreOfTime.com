@@ -2,7 +2,7 @@ name: Collect CPI
 
 on:
   schedule:
-    - cron: "0 12 10 * *"
+    - cron: "0 12 5,15,25 * *"
   workflow_dispatch:
 
 jobs:
