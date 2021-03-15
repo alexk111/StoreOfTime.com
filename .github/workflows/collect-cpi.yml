@@ -3,6 +3,7 @@ name: Collect CPI
 on:
   schedule:
     - cron: "0 12 10 * *"
+  workflow_dispatch:
 
 jobs:
   deploy:
