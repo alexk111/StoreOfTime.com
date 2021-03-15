@@ -55,7 +55,7 @@
     font-weight:800;
   }
   .main-block {
-    margin: 12px 0;
+    margin: 2px 0;
   }
   .inline-block {
     display: inline-block;
@@ -113,22 +113,66 @@
     border-style: none;
   }
 
-  @media (max-width: 600px) {
-		body {
-			padding:24px 0;
-		}
-		.chart,
-		#chart {
-			height:50vh;
-		}
-    .main-block {
-      margin: 16px 0;
-    }
-	}
+  .chart-notes {
+    text-align: center;
+    margin:0 0 24px;
+  }
+  .chart-notes .inline-block {
+    margin: 0 12px 4px 12px;
+  }
+  .chart-notes-color {
+    display: inline-block;
+    width: 32px;
+    height: 4px;
+    vertical-align: middle;
+  }
+  .chart-notes-color.has-cpi-data {
+    background-color: #5c9e31;
+  }
+  .chart-notes-color.no-cpi-data {
+    background-color: #acbccc;
+  }
 
-  @media (max-width: 800px) {
-    .info, .footer {
-      flex-direction: column;
+  .donate {
+    margin: 12px 0 0 0;
+    position: relative;
+    display: inline-block;
+    background: #5c9e31;
+    background: -webkit-linear-gradient(top, transparent 0%, rgba(0,0,0,0.4) 100%),
+                -webkit-linear-gradient(left, #70c03b 0%, #5c9e31 50%, #70c03b 100%);
+    background: linear-gradient(top bottom, transparent 0%, rgba(0,0,0,0.4) 100%),
+                linear-gradient(top right, #70c03b 0%, #5c9e31 50%, #70c03b 100%);
+    background-position: 0 0;
+    background-size: 200% 100%;
+    border-radius: 4px;
+    color: #fff;
+    padding: 12px 62px 12px 12px;
+    text-shadow: 1px 1px 5px #666;
+    -webkit-transition: all 220ms;
+    transition: all 220ms;
+  }
+  .donate:after {
+    border-left: 1px solid #5ea332;
+    color: #aadb8b;
+    content: "\20BF";
+    font: 20px "Arial";
+    padding: 8px 0;
+    padding-left: 15px;
+    position: absolute;
+    right: 16px;
+    top: 4px;
+    -webkit-transition: all 100ms;
+    transition: all 100ms;
+  }
+  .donate:hover:after {
+    border-left: 1px solid #63aa34;
+    color: #fff;
+    text-shadow: 0 0 10px #000;
+  }
+
+  @media (max-width: 1200px) {
+    .info-block {
+      flex-basis: 40%;
     }
   }
 
@@ -138,9 +182,31 @@
     }
   }
 
-  @media (max-width: 1200px) {
-    .info-block {
-      flex-basis: 40%;
+  @media (max-width: 800px) {
+    .info, .footer {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .main, .main select {
+      font-size: 16px;
+      line-height: 2.5;
+    }
+  }
+  @media (max-width: 600px) {
+		body {
+			padding:24px 0;
+		}
+		.chart,
+		#chart {
+			height:50vh;
+		}
+	}
+
+  @media (max-width: 400px) {
+    .main, .main select {
+      font-size: 14px;
     }
   }
 </style>
@@ -578,20 +644,31 @@
         </select>
       </span>
     </div>
-  </div>
 
-  <div class="main-block">
-    <span class="inline-block">
-      today has value of
-    </span>
-    <span class="inline-block">
-      <b><span class="thing-now-qty">⏳</span> Days of Work</b>
-    </span>
+    <div>
+      <span class="inline-block">
+        today has value of
+      </span>
+      <span class="inline-block">
+        <b><span class="thing-now-qty">⏳</span> Days of Work</b>
+      </span>
+    </div>
   </div>
 </section>
 
 <section class="chart">
 	<canvas id="chart" width="500" height="400"></canvas>
+</section>
+
+<section class="chart-notes">
+  <div>
+    <span class="inline-block">
+      <span class="chart-notes-color has-cpi-data"></span> Calculated using Consumer Price change data
+    </span>
+    <span class="inline-block">
+      <span class="chart-notes-color no-cpi-data"></span> No Consumer Price change data available for the period yet
+    </span>
+  </div>
 </section>
 
 <section class="info">
@@ -632,7 +709,7 @@
     <p>
       Thank you for your support! 🙌
       <br/>
-      <a href="https://mynode.alexkaul.com/gh-donate" target="_blank" rel="noopener noreferrer" class="btn btn-warning my-2">
+      <a href="https://mynode.alexkaul.com/gh-donate" target="_blank" rel="noopener noreferrer" class="donate">
         Donate
       </a>
     </p>
@@ -722,7 +799,7 @@
         var dataset = chart.data.datasets[0];
         if (dataset) {
           dataset.colors.forEach((c, i) => {
-            var stop = 1 / (dataset.colors.length - 1) * i;
+            var stop = i / (dataset.colors.length - 1);
             gradientStroke.addColorStop(stop, dataset.colors[i]);
           });
           dataset.backgroundColor = gradientStroke;
@@ -874,7 +951,7 @@
             if (thingTimePrice[curThingTimePriceIdx][2] === 1) {
               dataset.colors.push("#5c9e31");
             } else {
-              dataset.colors.push("#5c6c7c");
+              dataset.colors.push("#acbccc");
             }
           }
           dataset.data = datasetData;
