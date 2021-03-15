@@ -154,39 +154,44 @@
 
 <section class="main">
   <div class="main-block">
-    <span class="inline-block"><b>1 Day of Work</b></span>
+    <div>
+      <span class="inline-block"><b>1 Day of Work</b></span>
+      <span class="inline-block">traded for money</span>
+    </div>
 
-    <span class="inline-block">traded for money</span>
+    <div>
+      <span class="inline-block">
+        in
+        <select class="sel-country">
+          <% Object.values(countries).sort((v1,v2) => v1[0] > v2[0] ? 1 : -1).forEach((country) => { %>
+          <option value="<%= country[2] %>"<%= (country[2] === something.countries.default ? " selected" : "") %>><%= country[0] %></option>
+          <% }) %>
+        </select>
+      </span>
 
-    <span class="inline-block">
-      in
-      <select class="sel-country">
-        <% Object.values(countries).sort((v1,v2) => v1[0] > v2[0] ? 1 : -1).forEach((country) => { %>
-        <option value="<%= country[2] %>"<%= (country[2] === something.countries.default ? " selected" : "") %>><%= country[0] %></option>
-        <% }) %>
-      </select>
-    </span>
+      <span class="inline-block">
+        in
+        <select class="sel-year">
+          <% for (let year = something.year.from; year < (new Date()).getUTCFullYear(); year++) { %>
+          <option value="<%= year %>"<%= (year === something.year.default ? " selected" : "") %>><%= year %></option>
+          <% } %>
+        </select>
+      </span>
+    </div>
 
-    <span class="inline-block">
-      in
-      <select class="sel-year">
-        <% for (let year = something.year.from; year < (new Date()).getUTCFullYear(); year++) { %>
-        <option value="<%= year %>"<%= (year === something.year.default ? " selected" : "") %>><%= year %></option>
-        <% } %>
-      </select>
-    </span>
-
-    <span class="inline-block">
-      and stored in
-      <select class="sel-curr bitcoin-color">
-        <option value="BTC">Bitcoin</option>
-        <option value="local">Local Currency</option>
-        <option value="USD">USD</option>
-        <% Object.getOwnPropertyNames(something.stores).forEach((curr) => { %>
-          <option value="<%= curr %>"><%= something.stores[curr] %></option>
-        <% }) %>
-      </select>
-    </span>
+    <div>
+      <span class="inline-block">
+        and stored in
+        <select class="sel-curr bitcoin-color">
+          <option value="BTC">Bitcoin</option>
+          <option value="local">Local Currency</option>
+          <option value="USD">USD</option>
+          <% Object.getOwnPropertyNames(something.stores).forEach((curr) => { %>
+            <option value="<%= curr %>"><%= something.stores[curr] %></option>
+          <% }) %>
+        </select>
+      </span>
+    </div>
   </div>
 
   <div class="main-block">
