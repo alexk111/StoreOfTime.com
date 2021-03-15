@@ -1,11 +1,9 @@
 name: CD
 
-# on:
-#   push:
-#     branches:
-#       - master
-#   schedule:
-#     - cron: "12 0 * * *"
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   deploy:
