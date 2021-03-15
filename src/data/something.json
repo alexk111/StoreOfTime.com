@@ -14,6 +14,7 @@
   },
   "colors": {
     "primary": "#5c9e31",
+    "noCpi": "#acbccc",
     "secondary": "#5c6c7c",
     "background": "#ffffff",
     "bitcoin": "#FF9900"
