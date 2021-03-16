@@ -9,6 +9,8 @@
     "default": "US"
   },
   "stores": {
+    "^IXIC": "NASDAQ Composite",
+    "^GSPC": "S&P 500",
     "XAU": "Gold",
     "XAG": "Silver"
   },

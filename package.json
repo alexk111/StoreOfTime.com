@@ -11,13 +11,15 @@
     "collect-cpi": "node ./data-collector-cpi.js",
     "collect-currencies": "node ./data-collector-currencies.js",
     "collect-exchange-rates": "node ./data-collector-exchange-rates.js",
+    "collect-stocks": "node ./data-collector-stocks.js",
     "dev": "NODE_ENV=development concurrently -k \"serve ./build\" \"nodemon -e ejs,json,svg,png --watch src ./builder.js\""
   },
   "dependencies": {
     "csv-parser": "^3.0.0",
     "ejs": "^3.1.6",
     "fs-extra": "^9.1.0",
-    "glob": "^7.1.6"
+    "glob": "^7.1.6",
+    "yahoo-finance": "^0.3.7"
   },
   "devDependencies": {
     "concurrently": "^6.0.0",

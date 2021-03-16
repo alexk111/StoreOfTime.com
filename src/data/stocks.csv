@@ -1,0 +1,3 @@
+symbol,name,filename
+^IXIC,NASDAQ Composite,idx_ixic
+^GSPC,S&P 500,idx_gspc

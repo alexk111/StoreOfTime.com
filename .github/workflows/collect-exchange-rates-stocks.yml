@@ -1,4 +1,4 @@
-name: Collect Exchange Rates
+name: Collect Exchange Rates & Stocks
 
 on:
   schedule:
@@ -19,14 +19,17 @@ jobs:
       - name: Install Deps
         run: |
           yarn install --production
-      - name: Collect
+      - name: Collect Exch Rates
         run: |
           yarn collect-exchange-rates
         env:
           OXR_APP_ID: ${{ secrets.OXR_APP_ID }}
-      - name: Commit and Push
+      - name: Collect Stocks
+        run: |
+          yarn collect-stocks
+     - name: Commit and Push
         run: |
           git config --global user.name 'alexk111'
           git config --global user.email 'alexk111@users.noreply.github.com'
-          git commit -am "Automated rates collection"
+          git commit -am "Automated data collection"
           git push

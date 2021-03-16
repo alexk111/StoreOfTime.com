@@ -2,7 +2,6 @@ const https = require("https");
 const path = require("path");
 
 const fse = require("fs-extra");
-const { listenerCount } = require("process");
 
 const oxrAppId = process.env.OXR_APP_ID;
 

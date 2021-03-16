@@ -13,6 +13,7 @@ const pathData = path.join(pathSrc, "data");
 const pathCollected = path.join(pathData, "_collected");
 const pathCollectedCPI = path.join(pathCollected, "cpi");
 const pathCollectedUSDRates = path.join(pathCollected, "usd-rates");
+const pathCollectedStocks = path.join(pathCollected, "stocks");
 const pathBuild = path.join(".", "build");
 
 const isDevMode = process.env.NODE_ENV === "development";
@@ -23,6 +24,9 @@ const cpi = {}; // CPI (Consumer Price Index) (by country code)
 const usdPrices = {}; // USD price history in different currencies (by currency code)
 const countries = {}; // countries data (by country code)
 const redenominations = {}; // redenominations data (by country code)
+const stocksInfo = {}; // stocks info (by symbol name)
+const stocksInfoByFilename = {}; // stocks info (by filename)
+const stocks = {}; // stocks history (by symbol name)
 
 const countriesWithAllData = {}; // countries that have all the necessary data (by country code)
 const thingPrices = {}; // thing price history in Local/USD/BTC/XAU/XAG (by country code)
@@ -109,6 +113,25 @@ async function loadRedenominationsFromCSV() {
           }
           redenominations[country_code].push({timestamp: strYYYYMMDDToTimestamp(date), new_currency_code,from_amount,to_amount});
         }
+      })
+      .on("end", () => {
+        resolve();
+      })
+      .on("error", (err) => {
+        reject(err);
+      });
+  });
+}
+
+async function loadStocksInfoFromCSV() {
+  return new Promise((resolve, reject) => {
+    fse
+      .createReadStream(path.join(pathData, "stocks.csv"))
+      .pipe(csv({}))
+      .on("data", (data) => {
+        const {symbol,name,filename} = data;
+        stocksInfo[symbol] = { name, filename };
+        stocksInfoByFilename[filename] = {name, symbol};
       })
       .on("end", () => {
         resolve();
@@ -206,6 +229,29 @@ async function loadCPI() {
   }
 }
 
+async function loadStockFromJSON(filePath) {
+  const fileData = await fse.readFile(filePath);
+  const parsedData = JSON.parse(fileData);
+  const strStockFilename = path.basename(filePath, '.json');
+  const stockInfo = stocksInfoByFilename[strStockFilename];
+  stocks[stockInfo.symbol] = {};
+  for (const item of parsedData) {
+    stocks[stockInfo.symbol][item[0]] = item[1];
+  }
+}
+
+async function loadStocks() {
+  // Get stock files
+  const jsonPaths = await promGlob("**/*.json", {
+    cwd: pathCollectedStocks,
+  });
+
+  // Load stocks
+  for (const jsonPath of jsonPaths) {
+    await loadStockFromJSON(path.join(pathCollectedStocks, jsonPath));
+  }
+}
+
 function applyRedenomination(countryCode, baseAmount, nowTimestamp) {
   const res = {
     amount: baseAmount,
@@ -235,6 +281,9 @@ function calculateThingPrices() {
     for (const store of Object.keys(something.stores)) {
       pricesByStores[store] = [];
     }
+    for (const stock of Object.keys(stocks)) {
+      pricesByStores[stock] = [];
+    }
 
     const cpiItems = cpi[countryCode];
     if (!cpiItems) {
@@ -259,11 +308,14 @@ function calculateThingPrices() {
       pricesByStores["USD"].push([strYYYYMMDD, thingPriceInUSD, isEstimate ? 0 : 1]);
 
       // c. calc btc & other prices
-      for (const store of Object.keys(pricesByStores)) {
-        if (store !== "local" && store !== "USD") {
-          const thingPriceInStore = thingPriceInUSD * usdPrices[store][strYYYYMMDD];
-          pricesByStores[store].push([strYYYYMMDD, thingPriceInStore, isEstimate ? 0 : 1]);
+      for (const store of ["BTC"].concat(Object.keys(something.stores))) {
+        let thingPriceInStore;
+        if (usdPrices[store]) {
+          thingPriceInStore = thingPriceInUSD * usdPrices[store][strYYYYMMDD];
+        } else {
+          thingPriceInStore = thingPriceInUSD / stocks[store][strYYYYMMDD];
         }
+        pricesByStores[store].push([strYYYYMMDD, thingPriceInStore, isEstimate ? 0 : 1]);
       }
     }
 
@@ -310,8 +362,10 @@ async function build() {
   console.info("Loading data...");
   await loadCountriesFromCSV();
   await loadRedenominationsFromCSV();
+  await loadStocksInfoFromCSV();
   await loadUSDPrices();
   await loadCPI();
+  await loadStocks();
 
   // Calculate prices
   calculateThingPrices();
