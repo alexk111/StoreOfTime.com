@@ -27,7 +27,7 @@ jobs:
       - name: Collect Stocks
         run: |
           yarn collect-stocks
-     - name: Commit and Push
+      - name: Commit and Push
         run: |
           git config --global user.name 'alexk111'
           git config --global user.email 'alexk111@users.noreply.github.com'
