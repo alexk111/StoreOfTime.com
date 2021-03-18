@@ -170,6 +170,14 @@
     text-shadow: 0 0 10px #000;
   }
 
+  .cpi-note-link {
+    font-weight: bold;
+    text-decoration: none;
+  }
+  .cpi-note-link:hover {
+    text-decoration: none;
+  }
+
   @media (max-width: 1200px) {
     .info-block {
       flex-basis: 40%;
@@ -264,7 +272,7 @@
         today has value of
       </span>
       <span class="inline-block">
-        <b><span class="thing-now-qty">⏳</span> Days of Work</b>
+        <b><span class="thing-now-qty">⏳</span> Days of Work</b> <a href="#cpi-note" class="cpi-note-link">*</a>
       </span>
     </div>
   </div>
@@ -283,6 +291,19 @@
       <span class="chart-notes-color no-cpi-data"></span> No inflation data available for the period yet
     </span>
   </div>
+</section>
+
+<section class="cpi-note">
+  <h2>* Note on Inflation</h2>
+  <p>To adjust data for inflation, the Consumer Price Index (CPI) is used. The CPI is calculated by government statisticians, and lower CPI provides at least two benefits to the governments:</p>
+  <ol>
+    <li>
+      Many government payments are linked to the CPI. Therefore, a lower CPI translates into lower payments and lower government expenditures.
+    </li>
+    <li>
+      The CPI deflates some components used to calculate the real GDP. If the true rate of inflation is higher than the CPI as the government calculates it, then an investor's real rate of return will be less than originally expected.
+    </li>
+  </ol>
 </section>
 
 <section class="info">
