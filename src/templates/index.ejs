@@ -135,7 +135,6 @@
 
   .donate {
     margin: 12px 0 0 0;
-    position: relative;
     display: inline-block;
     background: #FF9900;
     background: -webkit-linear-gradient(top, transparent 0%, rgba(0,0,0,0.2) 100%),
@@ -146,22 +145,23 @@
     background-size: 200% 100%;
     border-radius: 4px;
     color: #fff;
-    padding: 12px 62px 12px 12px;
+    padding: 12px 20px;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.75);
     -webkit-transition: all 220ms;
     transition: all 220ms;
+    vertical-align: middle;
   }
   .donate:after {
     border-left: 1px solid rgba(255,255,255,0.15);
-    color: #ffe4bd;
     content: "\20BF";
     font: 20px "Arial";
-    padding-left: 15px;
+    margin-left: 15px;
+    display:inline-block;
+    padding: 0 0 0 15px;
     box-sizing: border-box;
-    position: absolute;
-    right: 16px;
     -webkit-transition: all 100ms;
     transition: all 100ms;
+    vertical-align: middle;
   }
   .donate:hover:after {
     border-left: 1px solid rgba(255,255,255,0.15);
