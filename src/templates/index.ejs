@@ -137,23 +137,23 @@
     margin: 12px 0 0 0;
     position: relative;
     display: inline-block;
-    background: #5c9e31;
-    background: -webkit-linear-gradient(top, transparent 0%, rgba(0,0,0,0.4) 100%),
-                -webkit-linear-gradient(left, #70c03b 0%, #5c9e31 50%, #70c03b 100%);
-    background: linear-gradient(top bottom, transparent 0%, rgba(0,0,0,0.4) 100%),
-                linear-gradient(top right, #70c03b 0%, #5c9e31 50%, #70c03b 100%);
+    background: #FF9900;
+    background: -webkit-linear-gradient(top, transparent 0%, rgba(0,0,0,0.2) 100%),
+                -webkit-linear-gradient(left, #FF9900 0%, #e28800 50%, #FF9900 100%);
+    background: linear-gradient(top bottom, transparent 0%, rgba(0,0,0,0.2) 100%),
+                linear-gradient(top right, #FF9900 0%, #e28800 50%, #FF9900 100%);
     background-position: 0 0;
     background-size: 200% 100%;
     border-radius: 4px;
     color: #fff;
     padding: 12px 62px 12px 12px;
-    text-shadow: 1px 1px 5px #666;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.75);
     -webkit-transition: all 220ms;
     transition: all 220ms;
   }
   .donate:after {
-    border-left: 1px solid #5ea332;
-    color: #aadb8b;
+    border-left: 1px solid rgba(255,255,255,0.15);
+    color: #ffe4bd;
     content: "\20BF";
     font: 20px "Arial";
     padding: 8px 0;
@@ -165,9 +165,9 @@
     transition: all 100ms;
   }
   .donate:hover:after {
-    border-left: 1px solid #63aa34;
+    border-left: 1px solid rgba(255,255,255,0.15);
     color: #fff;
-    text-shadow: 0 0 10px #000;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.2);
   }
 
   .cpi-note-link {
@@ -295,7 +295,7 @@
 
 <section class="cpi-note">
   <h2>* Note on Inflation</h2>
-  <p>To adjust data for inflation, the Consumer Price Index (CPI) is used. The CPI is calculated by government statisticians, and lower CPI provides at least two benefits to the governments:</p>
+  <p>To adjust data for inflation, the Consumer Price Index (CPI) is used. The CPI is calculated by government statisticians and might be manipulated to report lower values, as lower CPI provides at least two benefits to the governments:</p>
   <ol>
     <li>
       Many government payments are linked to the CPI. Therefore, a lower CPI translates into lower payments and lower government expenditures.
