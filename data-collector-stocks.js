@@ -76,25 +76,26 @@ async function build() {
   const dataBySymbols = {};
 
   for (const symbol of stockSymbols) {
-    for (const item of history[symbol]) {
-      const { symbol, open, close, date } = item;
+    history[symbol].sort((v1,v2) => ((new Date(v1.date)).getTime() > (new Date(v2.date)).getTime()) ? 1 : -1);
+    let lastClose;
+    let symbolHistory = history[symbol];
+    for (let itemIdx=0; itemIdx<symbolHistory.length; itemIdx++) {
+      const { symbol, open, close, date } = symbolHistory[itemIdx];
+      lastClose=close;
       const d = new Date(date);
       const strYYYYMMDD = dateToYYYYMMDD(d);
 
       if (!dataBySymbols[symbol]) {
         dataBySymbols[symbol] = [];
       }
-      dataBySymbols[symbol].push([strYYYYMMDD, open]);
-      if (
-        (d.getUTCFullYear() === dNow.getUTCFullYear()) &&
-        (d.getUTCMonth() === dNow.getUTCMonth()) &&
-        (dNow.getUTCDate() > 1)
-      ) {
-        dataBySymbols[symbol].push([strYYYYMMDDNow, close]);
+      if (d.getUTCDate() === 1) {
+        dataBySymbols[symbol].push([strYYYYMMDD, open]);
       }
     }
+    if (dNow.getUTCDate() > 1) {
+      dataBySymbols[symbol].push([strYYYYMMDDNow, lastClose]);
+    }
 
-    dataBySymbols[symbol].sort((v1,v2) => v1[0] > v2[0] ? 1 : -1)
     const stockFilename = stocksInfo[symbol].filename;
     const outFile = path.join(pathCollectedStocks, stockFilename + ".json");
     await fse.writeFile(outFile, JSON.stringify(dataBySymbols[symbol], null, 2));
