@@ -35,13 +35,26 @@
     padding:32px;
     background: <%= something.colors.background %>;
   }
-  h1 {
+  header {
+    text-align:center;
+    margin: 0 0 24px 0;
+  }
+  header, header select {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size:24px;
+  }
+  header select {
+    font-weight:800;
+  }
+  header h1 {
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size:40px;
     font-weight:800;
+    margin: 24px 0 12px 0;
   }
-  header {
-    text-align:center;
+  .sel-version {
+    color: <%= something.colors.secondary %>;
+    border-color: <%= something.colors.secondary %>;
   }
   .main {
     text-align:center;
@@ -222,6 +235,15 @@
 <header>
   <div class="logo"><span class="icon"><%= something.icon %></span></div>
   <h1>Store of Time</h1>
+  <div>
+    <span class="inline-block"></span>
+    <span class="inline-block">Version:</span>
+    <select class="sel-version">
+      <% for (const ver of versions) { %>
+        <option value="<%= (ver[1] === curVersionId ? "" : ver[0]) %>"<%= (ver[1] === curVersionId ? " selected" : "") %>><%= ver[2] %></option>
+      <% } %>
+    </select>
+  </div>
 </header>
 
 <section class="main">
@@ -267,7 +289,7 @@
 
     <div>
       <span class="inline-block">
-        today has value of
+        today has an est. value of
       </span>
       <span class="inline-block">
         <b><span class="thing-now-qty">⏳</span> Days of Work</b> <a href="#notes" class="notes-link">*</a>
@@ -300,15 +322,11 @@
   </div>
   <div class="notes-block">
     <h2>Note on Inflation</h2>
-    <p>To adjust data for inflation, the Consumer Price Index (CPI) is used. The CPI is calculated by government statisticians and might be manipulated to report lower values, as lower CPI provides at least two benefits to the governments:</p>
-    <ol>
-      <li>
-        Many government payments are linked to the CPI. Therefore, a lower CPI translates into lower payments and lower government expenditures.
-      </li>
-      <li>
-        The CPI deflates some components used to calculate the real GDP. If the true rate of inflation is higher than the CPI as the government calculates it, then an investor's real rate of return will be less than originally expected.
-      </li>
-    </ol>
+    <p>To adjust data for inflation, the website uses Broad Money Supply and Consumer Price Index (CPI) datasets.</p>
+    <h3>Broad Money Supply</h3>
+    <p>The broad money supply includes currency in circulation, checking/savings deposits, and various functional cash-equivalents that consumers and businesses hold at commercial banks. "Printing" money by increasing the money supply diminishes the value of the currency, its purchasing power falls and prices rise.</p>
+    <h3>Consumer Price Index</h3>
+    <p>The CPI measures the monthly change in prices paid by consumers. It is calculated by government statisticians and might be manipulated to report lower values, as lower CPI provides benefits to the governments. That's why the Broad Money Supply version will be more accurate.</p>
   </div>
 </section>
 
@@ -357,7 +375,7 @@
   </div>
   <div class="info-block">
     <h2>📈 Data</h2>
-    <p>Consumer Price Index data is provided by <a href="https://www.imf.org/" target="_blank">International Monetary Fund</a>.</p>
+    <p>Broad Money Supply and Consumer Price Index data is provided by <a href="https://www.imf.org/" target="_blank">International Monetary Fund</a>.</p>
     <p>Exchange Rates data is provided by <a href="https://openexchangerates.org/" target="_blank">Open Exchange Rates</a>.</p>
     <p>Stock Market data is provided by <a href="https://finance.yahoo.com/" target="_blank">Yahoo Finance</a>.</p>
   </div>
@@ -513,6 +531,12 @@
   });
 
 	$(function () {
+		$('.sel-version').on('change', function() {
+      var url = $('.sel-version').val();
+      if (url) {
+        document.location.href=url;
+      }
+    });
 		$('.sel-country').on('change', function() {
       updateScreen();
     });

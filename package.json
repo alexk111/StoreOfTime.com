@@ -8,6 +8,7 @@
   "private": true,
   "scripts": {
     "build": "node ./builder.js",
+    "collect-bm": "node ./data-collector-bm.js",
     "collect-cpi": "node ./data-collector-cpi.js",
     "collect-currencies": "node ./data-collector-currencies.js",
     "collect-exchange-rates": "node ./data-collector-exchange-rates.js",

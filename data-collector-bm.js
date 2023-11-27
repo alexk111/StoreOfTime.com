@@ -6,7 +6,7 @@ const fse = require("fs-extra");
 
 const pathSrc = "./src";
 const pathCollected = pathSrc + "/data/_collected";
-const pathCollectedCPI = pathCollected + "/cpi";
+const pathCollectedBM = pathCollected + "/bm";
 
 async function delay(duration) {
   return new Promise((resolve) => setTimeout(resolve,duration));
@@ -36,8 +36,8 @@ async function loadCountriesFromCSV(filePath) {
   });
 }
 
-async function loadCPIFromRemoteAPI(countryCodes) {
-  const url = `http://dataservices.imf.org/REST/SDMX_JSON.svc/CompactData/CPI/M.${countryCodes.join("+")}.PCPI_IX?startPeriod=2013&endPeriod=${(new Date()).getUTCFullYear()}`;
+async function loadBMFromRemoteAPI(countryCodes) {
+  const url = `http://dataservices.imf.org/REST/SDMX_JSON.svc/CompactData/IFS/M.${countryCodes.join("+")}.FMB_XDC+FMB_EUR+FMB_USD?startPeriod=2013&endPeriod=${(new Date()).getUTCFullYear()}`;
   return new Promise((resolve, reject) => {
     http
       .get(url, {
@@ -58,7 +58,7 @@ async function loadCPIFromRemoteAPI(countryCodes) {
               for (const seriesItem of gotData.CompactData.DataSet.Series) {
                 if (seriesItem.Obs) {
                   const countryCode = seriesItem["@REF_AREA"];
-                  const pathOutFile = path.join(pathCollectedCPI, `${countryCode}.json`);
+                  const pathOutFile = path.join(pathCollectedBM, `${countryCode}.json`);
                   const obsData = seriesItem.Obs;
                   const outData = [];
                   for (let i = 0; i < obsData.length; i++) {
@@ -90,7 +90,7 @@ function chunkArrayInGroups(arr, size) {
 }
 
 async function build() {
-  console.info("Collecting CPI data...");
+  console.info("Collecting Broad Money data...");
 
   const countries = await loadCountriesFromCSV(`${pathSrc}/data/countries.csv`);
   const countryCodeGroups = chunkArrayInGroups(Object.keys(countries), 70);
@@ -98,7 +98,7 @@ async function build() {
   for (let i=0; i<countryCodeGroups.length; i++) {
     console.info(`${i+1}/${countryCodeGroups.length}`);
     const countryCodeGroup = countryCodeGroups[i];
-    await loadCPIFromRemoteAPI(countryCodeGroup);
+    await loadBMFromRemoteAPI(countryCodeGroup);
     await delay(500); // API limits = 10 requests in 5 second window from one user (IP)
   }
 }

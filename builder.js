@@ -8,10 +8,15 @@ const promGlob = promisify(require("glob"));
 const https = require("https");
 const path = require("path");
 
+const versions = [['bm.html', 'BM', 'Broad Money Supply'], ['index.html', 'CPI', 'Consumer Price Index']]
+
 const pathSrc = path.join(".", "src");
 const pathData = path.join(pathSrc, "data");
 const pathCollected = path.join(pathData, "_collected");
-const pathCollectedCPI = path.join(pathCollected, "cpi");
+const pathCollectedInfl ={
+  BM: path.join(pathCollected, "bm"),
+  CPI: path.join(pathCollected, "cpi")
+}
 const pathCollectedUSDRates = path.join(pathCollected, "usd-rates");
 const pathCollectedStocks = path.join(pathCollected, "stocks");
 const pathBuild = path.join(".", "build");
@@ -20,7 +25,10 @@ const isDevMode = process.env.NODE_ENV === "development";
 
 const something = require(`./src/data/something.json`);
 
-const cpi = {}; // CPI (Consumer Price Index) (by country code)
+const inflData = { // Inflation Data (by infl data id, by country code)
+  BM: {},
+  CPI: {}
+};
 const usdPrices = {}; // USD price history in different currencies (by currency code)
 const countries = {}; // countries data (by country code)
 const redenominations = {}; // redenominations data (by country code)
@@ -28,8 +36,14 @@ const stocksInfo = {}; // stocks info (by symbol name)
 const stocksInfoByFilename = {}; // stocks info (by filename)
 const stocks = {}; // stocks history (by symbol name)
 
-const countriesWithAllData = {}; // countries that have all the necessary data (by country code)
-const thingPrices = {}; // thing price history in Local/USD/BTC/XAU/XAG (by country code)
+const countriesWithAllData = { // countries that have all the necessary data (by infl data id, by country code)
+  BM: {},
+  CPI: {}
+};
+const thingPrices = { // thing price history in Local/USD/BTC/XAU/XAG (by infl data id, by country code)
+  BM: {},
+  CPI: {}
+};
 
 let latestYYYYMMDD;
 
@@ -180,7 +194,7 @@ async function loadUSDPrices() {
   }
 }
 
-async function loadCPIFromJSON(filePath) {
+async function loadInflDataFromJSON(inflDataId, filePath) {
   const countryCode = path.basename(filePath, '.json');
   if (something.countries.excluded.indexOf(countryCode)>-1) {
     return;
@@ -194,38 +208,38 @@ async function loadCPIFromJSON(filePath) {
       continue;
     }
 
-    let cpiVal;
+    let inflDataVal;
     if (dataItem[1] === null) {
       if (!foundFirstNonNull) {
         continue; // skip nulls at the beginning
       }
-      cpiVal = null;
+      inflDataVal = null;
     } else {
       foundFirstNonNull = true;
-      cpiVal = dataItem[1]*1;
+      inflDataVal = dataItem[1]*1;
     }
 
-    if (cpi[countryCode] === undefined) {
-      cpi[countryCode] = [];
+    if (inflData[inflDataId][countryCode] === undefined) {
+      inflData[inflDataId][countryCode] = [];
     }
-    cpi[countryCode].push({
+    inflData[inflDataId][countryCode].push({
       strYYYYMM,
-      cpiVal
+      inflDataVal
     })
   }
 
-  cpi[countryCode].sort((v1,v2) => v1.strYYYYMM > v2.strYYYYMM ? 1 : -1);
+  inflData[inflDataId][countryCode].sort((v1,v2) => v1.strYYYYMM > v2.strYYYYMM ? 1 : -1);
 }
 
-async function loadCPI() {
-  // Get cpi files
+async function loadInflData(inflDataId) {
+  // Get infl data files
   const jsonPaths = await promGlob("**/*.json", {
-    cwd: pathCollectedCPI,
+    cwd: pathCollectedInfl[inflDataId],
   });
 
-  // Load cpi
+  // Load infl data
   for (const jsonPath of jsonPaths) {
-    await loadCPIFromJSON(path.join(pathCollectedCPI, jsonPath));
+    await loadInflDataFromJSON(inflDataId, path.join(pathCollectedInfl[inflDataId], jsonPath));
   }
 }
 
@@ -270,7 +284,7 @@ function applyRedenomination(countryCode, baseAmount, nowTimestamp) {
   return res;
 }
 
-function calculateThingPrices() {
+function calculateThingPrices(inflDataId) {
   for (const countryCode of Object.keys(countries)) {
     // init
     const pricesByStores = {
@@ -285,16 +299,16 @@ function calculateThingPrices() {
       pricesByStores[stock] = [];
     }
 
-    const cpiItems = cpi[countryCode];
-    if (!cpiItems) {
+    const inflDataItems = inflData[inflDataId][countryCode];
+    if (!inflDataItems) {
       continue;
     }
 
-    countriesWithAllData[countryCode] = countries[countryCode];
+    countriesWithAllData[inflDataId][countryCode] = countries[countryCode];
 
     let curAmountCurrencyNow;
     let setEstimatePrice;
-    let curCPIStrYYYYMMDD;
+    let curInflDataStrYYYYMMDD;
     let curThingPriceInLocalBase;
     let curThingPriceInLocalNow;
     let currCodeNow;
@@ -319,27 +333,27 @@ function calculateThingPrices() {
       }
     }
 
-    // 1. calc with cpi data
-    for (const cpiItem of cpiItems) {
-      const {strYYYYMM, cpiVal} = cpiItem;
-      curCPIStrYYYYMMDD = strYYYYMM + "-01";
-      curThingPriceInLocalBase = cpiVal * 1;
+    // 1. calc with infl data
+    for (const inflDataItem of inflDataItems) {
+      const {strYYYYMM, inflDataVal} = inflDataItem;
+      curInflDataStrYYYYMMDD = strYYYYMM + "-01";
+      curThingPriceInLocalBase = inflDataVal * 1;
 
       setEstimatePrice = (!curThingPriceInLocalBase);
 
-      const timestamp = strYYYYMMDDToTimestamp(curCPIStrYYYYMMDD);
+      const timestamp = strYYYYMMDDToTimestamp(curInflDataStrYYYYMMDD);
       if (!setEstimatePrice) {
         curAmountCurrencyNow = applyRedenomination(countryCode, curThingPriceInLocalBase, timestamp);
       }
       curThingPriceInLocalNow = curAmountCurrencyNow.amount;
       currCodeNow = curAmountCurrencyNow.currencyCode;
 
-      addToPricesByStores(curCPIStrYYYYMMDD, curThingPriceInLocalBase, curThingPriceInLocalNow, currCodeNow, setEstimatePrice);
+      addToPricesByStores(curInflDataStrYYYYMMDD, curThingPriceInLocalBase, curThingPriceInLocalNow, currCodeNow, setEstimatePrice);
     }
 
-    // 2. calc estimates for dates after the last cpi and till the latest exchange rate
+    // 2. calc estimates for dates after the last infl data item and till the latest exchange rate
     setEstimatePrice = true;
-    const dPointer = new Date(strYYYYMMDDToTimestamp(curCPIStrYYYYMMDD));
+    const dPointer = new Date(strYYYYMMDDToTimestamp(curInflDataStrYYYYMMDD));
     const dEndPointer = new Date(strYYYYMMDDToTimestamp(latestYYYYMMDD));
 
     do {
@@ -351,7 +365,7 @@ function calculateThingPrices() {
     } while (dPointer.getTime()<=dEndPointer.getTime());
 
     // 3. done
-    thingPrices[countryCode] = pricesByStores;
+    thingPrices[inflDataId][countryCode] = pricesByStores;
   }
 }
 
@@ -364,11 +378,15 @@ async function build() {
   await loadRedenominationsFromCSV();
   await loadStocksInfoFromCSV();
   await loadUSDPrices();
-  await loadCPI();
+  for (const ver of versions) {
+    await loadInflData(ver[1]);
+  }
   await loadStocks();
 
   // Calculate prices
-  calculateThingPrices();
+  for (const ver of versions) {
+    calculateThingPrices(ver[1]);
+  }
 
   // Clear build dir
   await fse.emptyDir(pathBuild);
@@ -388,29 +406,28 @@ async function build() {
   }
 
   // Get templates
-  const tplPaths = await promGlob("**/*.ejs", { cwd: `${pathSrc}/templates` });
+  const tplMain = `${pathSrc}/templates/main.ejs`;
 
-  // Generate pages from templates
-  tplPaths.forEach(async (tplPath) => {
-    const tplPathData = path.parse(tplPath);
-    const destPath = path.join(pathBuild, tplPathData.dir);
-
-    await fse.mkdirs(destPath);
+  // Generate pages
+  versions.forEach(async item=>{
+    const [htmlFileName, versionId] = item;
     const pageHtml = await ejs.renderFile(
-      path.join(pathSrc, "templates", tplPath),
+      tplMain,
       {
+        curVersionId: versionId,
+        versions,
         something,
-        countries: countriesWithAllData,
-        thingPrices,
+        countries: countriesWithAllData[versionId],
+        thingPrices: thingPrices[versionId],
       },
       { async: true }
     );
 
-    const htmlFilePath = path.join(pathBuild, tplPathData.name + ".html");
+    const htmlFilePath = path.join(pathBuild, htmlFileName);
     fse.writeFile(htmlFilePath, pageHtml).then(() => {
       console.info(`Built page file ${htmlFilePath}`);
     });
-  });
+  })
 }
 
 build();
