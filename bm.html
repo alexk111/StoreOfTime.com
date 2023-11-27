@@ -757,7 +757,7 @@
       return cb(thingTimePriceByCountryCache[countryCode]);
     }
 
-    $.get('data/' + countryCode + '.json', function (data) {
+    $.get('data/BM/' + countryCode + '.json', function (data) {
       addThingTimePriceToCache(countryCode, data);
       return cb(thingTimePriceByCountryCache[countryCode]);
     }, "json");
