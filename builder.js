@@ -399,12 +399,15 @@ async function build() {
   // Make data files
   const destDataPath = path.join(pathBuild, "data");
   await fse.mkdirs(destDataPath);
-  for (const countryCode of Object.keys(thingPrices)) {
-    const dataFilePath = path.join(destDataPath, countryCode + ".json");
-    fse.writeFile(dataFilePath, JSON.stringify(thingPrices[countryCode]));
-    console.info(`Built data file ${dataFilePath}`);
+  for (const ver of versions) {
+    const [_, versionId] = ver;
+    await fse.mkdirs(path.join(destDataPath, versionId));
+    for (const countryCode of Object.keys(thingPrices[versionId])) {
+      const dataFilePath = path.join(destDataPath, versionId, countryCode + ".json");
+      fse.writeFile(dataFilePath, JSON.stringify(thingPrices[versionId][countryCode]));
+      console.info(`Built data file ${dataFilePath}`);
+    }
   }
-
   // Get templates
   const tplMain = `${pathSrc}/templates/main.ejs`;
 
