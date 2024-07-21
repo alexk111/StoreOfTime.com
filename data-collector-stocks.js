@@ -1,7 +1,7 @@
 const csv = require("csv-parser");
 const fse = require("fs-extra");
 const path = require("path");
-const yahooFinance = require('yahoo-finance');
+const yahooFinance = require('yahoo-finance2').default;
 
 const pathSrc = path.join(".", "src");
 const pathData = path.join(pathSrc, "data");
@@ -28,21 +28,12 @@ async function loadStocksInfoFromCSV() {
   });
 }
 
-async function loadStockHistoryFromRemoteAPI(symbols, from, to, period) {
-  return new Promise((resolve, reject) => {
-    yahooFinance.historical({
-      symbols,
-      from,
-      to,
-      period // 'd' (daily), 'w' (weekly), 'm' (monthly), 'v' (dividends only)
-    }, function (err, quotes) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(quotes);
-      }
-    });
-  });
+async function loadStockHistoryFromRemoteAPI(symbol, from, to, period) {
+  return await yahooFinance.historical(symbol, {
+    period1: from,
+    period2: to,
+    interval: period
+  })
 }
 
 function dateToYYYYMMDD(d) {
@@ -72,33 +63,33 @@ async function build() {
   const strYYYYMMDDFrom = dateToYYYYMMDD(dFrom);
   const strYYYYMMDDNow = dateToYYYYMMDD(dNow);
 
-  const history = await loadStockHistoryFromRemoteAPI(stockSymbols, strYYYYMMDDFrom, strYYYYMMDDNow, "m");
-  const dataBySymbols = {};
-
   for (const symbol of stockSymbols) {
-    history[symbol].sort((v1,v2) => ((new Date(v1.date)).getTime() > (new Date(v2.date)).getTime()) ? 1 : -1);
+    console.log(symbol);
+    const symbolHistory = await loadStockHistoryFromRemoteAPI(symbol, strYYYYMMDDFrom, strYYYYMMDDNow, "1mo");
+    console.log(symbolHistory);
+    symbolHistory.sort((v1,v2) => ((new Date(v1.date)).getTime() > (new Date(v2.date)).getTime()) ? 1 : -1);
     let lastClose;
-    let symbolHistory = history[symbol];
+    let symbolData;
     for (let itemIdx=0; itemIdx<symbolHistory.length; itemIdx++) {
-      const { symbol, open, close, date } = symbolHistory[itemIdx];
+      const { open, close, date } = symbolHistory[itemIdx];
       lastClose=close;
       const d = new Date(date);
       const strYYYYMMDD = dateToYYYYMMDD(d);
 
-      if (!dataBySymbols[symbol]) {
-        dataBySymbols[symbol] = [];
+      if (!symbolData) {
+        symbolData = [];
       }
       if (d.getUTCDate() === 1) {
-        dataBySymbols[symbol].push([strYYYYMMDD, open]);
+        symbolData.push([strYYYYMMDD, open]);
       }
     }
     if (dNow.getUTCDate() > 1) {
-      dataBySymbols[symbol].push([strYYYYMMDDNow, lastClose]);
+      symbolData.push([strYYYYMMDDNow, lastClose]);
     }
 
     const stockFilename = stocksInfo[symbol].filename;
     const outFile = path.join(pathCollectedStocks, stockFilename + ".json");
-    await fse.writeFile(outFile, JSON.stringify(dataBySymbols[symbol], null, 2));
+    await fse.writeFile(outFile, JSON.stringify(symbolData, null, 2));
     console.info(`${symbol} saved as ${stockFilename}`);
   }
 }
