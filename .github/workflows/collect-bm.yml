@@ -1,4 +1,4 @@
-name: Collect CPI
+name: Collect BM
 
 on:
   schedule:
