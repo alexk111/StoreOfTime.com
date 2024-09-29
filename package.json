@@ -20,7 +20,7 @@
     "ejs": "^3.1.6",
     "fs-extra": "^9.1.0",
     "glob": "^7.1.6",
-    "yahoo-finance2": "^2.11.3"
+    "yahoo-finance2": "^2.13.0"
   },
   "devDependencies": {
     "concurrently": "^6.0.0",
